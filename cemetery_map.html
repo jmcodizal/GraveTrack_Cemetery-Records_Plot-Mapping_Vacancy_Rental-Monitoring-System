@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cemetery Map UI</title>
+
+<style>
+:root {
+  --blue-900:#0f2742;
+  --blue-800:#153a63;
+  --blue-700:#1f4f85;
+  --blue-500:#4d84bf;
+  --blue-300:#9fc3e6;
+  --blue-200:#c9def4;
+  --blue-100:#e8f2fb;
+  --blue-050:#f4f9ff;
+  --white:#ffffff;
+}
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  background:linear-gradient(180deg, var(--blue-050) 0%, #edf5fe 100%);
+  color:var(--blue-900);
+  font-family:"Trebuchet MS", "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+.header {
+  padding:16px 20px;
+  border-bottom:1px solid var(--blue-200);
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:0.4px;
+  background:var(--white);
+  color:var(--blue-800);
+}
+
+.legend {
+  margin:12px 20px 0;
+  display:flex;
+  flex-wrap:wrap;
+  gap:18px;
+}
+
+.legend-item {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+}
+
+.box {
+  width:14px;
+  height:14px;
+  border-radius:3px;
+  border:1px solid rgba(21,58,99,0.3);
+}
+
+.cemetery-map {
+  padding:26px 16px 30px;
+  overflow-x:auto;
+}
+
+.map-layout {
+  display:flex;
+  gap:20px;
+  align-items:flex-start;
+}
+
+.map-canvas {
+  min-width:1650px;
+}
+
+.map-row {
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+}
+
+.plot {
+  width:58px;
+}
+
+.plot-label {
+  text-align:center;
+  font-size:36px;
+  font-weight:700;
+  line-height:1;
+  margin-bottom:8px;
+  color:var(--blue-800);
+}
+
+.block {
+  width:100%;
+  height:520px;
+  border-radius:8px;
+  border:1px solid rgba(31,79,133,0.35);
+  background:linear-gradient(180deg, #f7fbff 0%, var(--blue-100) 100%);
+  cursor:pointer;
+  transition:transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.block:hover {
+  transform:translateY(-4px);
+  box-shadow:0 8px 20px rgba(0,0,0,0.14);
+}
+
+.block-short {
+  width:52px;
+  height:170px;
+  border-radius:8px;
+  border:1px solid rgba(31,79,133,0.35);
+  background:linear-gradient(180deg, #f7fbff 0%, var(--blue-100) 100%);
+  margin:0 44px;
+}
+
+.divider {
+  width:7px;
+  height:520px;
+  background:var(--blue-900);
+  border-radius:4px;
+  margin:0 6px;
+}
+
+.spacer-lg {
+  width:72px;
+}
+
+.spacer-md {
+  width:34px;
+}
+
+.fence-row {
+  margin-top:22px;
+  display:flex;
+  align-items:center;
+}
+
+.fence-segment {
+  height:44px;
+  position:relative;
+  border-top:9px solid var(--blue-900);
+  border-bottom:9px solid var(--blue-900);
+  flex:1;
+}
+
+.fence-segment::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  background:repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent 10px,
+    var(--blue-900) 10px,
+    var(--blue-900) 16px
+  );
+}
+
+.fence-gate {
+  width:106px;
+  height:56px;
+  border:4px solid var(--blue-900);
+  border-radius:6px;
+  margin:0 12px;
+  position:relative;
+  background:repeating-linear-gradient(
+    to right,
+    transparent 0,
+    transparent 6px,
+    var(--blue-900) 6px,
+    var(--blue-900) 10px
+  );
+}
+
+.fence-gate::before,
+.fence-gate::after {
+  content:"";
+  position:absolute;
+  top:-13px;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  border:3px solid var(--blue-900);
+  background:var(--white);
+}
+
+.fence-gate::before {
+  left:-12px;
+}
+
+.fence-gate::after {
+  right:-12px;
+}
+
+.occupied { background:linear-gradient(180deg, #24528a 0%, #1a3d68 100%); }
+.partial { background:linear-gradient(180deg, #78a9d8 0%, #4d84bf 100%); }
+.vacant { background:linear-gradient(180deg, #f9fcff 0%, #dcecff 100%); }
+
+.details-panel {
+  min-width:360px;
+  max-width:360px;
+  background:var(--white);
+  border:1px solid var(--blue-200);
+  border-radius:10px;
+  box-shadow:0 10px 24px rgba(31,79,133,0.14);
+  padding:14px;
+  position:sticky;
+  top:14px;
+}
+
+.details-title {
+  font-size:18px;
+  font-weight:700;
+  margin:0;
+}
+
+.details-subtitle {
+  margin:6px 0 12px;
+  color:var(--blue-700);
+  font-size:12px;
+}
+
+.status-row {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.badge {
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:3px 10px;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.4px;
+}
+
+.badge-paid {
+  background:#d8e8fb;
+  color:#1f4f85;
+}
+
+.badge-unpaid {
+  background:#eaf1fa;
+  color:#3e5f82;
+}
+
+.badge-vacant {
+  background:#eef6ff;
+  color:#2b5f95;
+}
+
+.badge-nonvacant {
+  background:#d5e6fa;
+  color:#1d4a79;
+}
+
+.record-list {
+  list-style:none;
+  margin:0;
+  padding:0;
+  max-height:560px;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.record-item {
+  border:1px solid #d7e6f7;
+  border-radius:8px;
+  padding:9px;
+  background:#f9fcff;
+}
+
+.record-name {
+  margin:0 0 5px;
+  font-size:13px;
+  font-weight:700;
+}
+
+.record-meta {
+  margin:0;
+  font-size:11px;
+  color:#355b83;
+  line-height:1.4;
+}
+
+@media (max-width: 900px) {
+  .map-layout {
+    flex-direction:column;
+  }
+
+  .details-panel {
+    min-width:100%;
+    max-width:100%;
+    position:static;
+  }
+
+  .plot-label {
+    font-size:28px;
+  }
+
+  .block {
+    height:420px;
+  }
+
+  .divider {
+    height:420px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">GraveTrack Cemetery Map</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="box occupied"></div>Occupied</div>
+  <div class="legend-item"><div class="box partial"></div>Partial</div>
+  <div class="legend-item"><div class="box vacant"></div>Vacant</div>
+</div>
+
+<div class="cemetery-map">
+  <div class="map-layout">
+    <div class="map-canvas">
+      <div class="map-row">
+        <div class="plot" data-block="AA">
+          <div class="plot-label">AA</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-lg"></div>
+
+        <div class="block-short" aria-hidden="true"></div>
+
+        <div class="divider" aria-hidden="true"></div>
+
+        <div class="plot" data-block="Z">
+          <div class="plot-label">Z</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="Y">
+          <div class="plot-label">Y</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="X">
+          <div class="plot-label">X</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="W">
+          <div class="plot-label">W</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="V">
+          <div class="plot-label">V</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="U">
+          <div class="plot-label">U</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="T">
+          <div class="plot-label">T</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="divider" aria-hidden="true"></div>
+
+        <div class="plot" data-block="I">
+          <div class="plot-label">I</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="H">
+          <div class="plot-label">H</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="G">
+          <div class="plot-label">G</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="F">
+          <div class="plot-label">F</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="E">
+          <div class="plot-label">E</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="D">
+          <div class="plot-label">D</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="C">
+          <div class="plot-label">C</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="B">
+          <div class="plot-label">B</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="A">
+          <div class="plot-label">A</div>
+          <div class="block"></div>
+        </div>
+      </div>
+
+      <div class="fence-row" aria-hidden="true">
+        <div class="fence-gate"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-gate"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-gate"></div>
+        <div class="fence-segment"></div>
+      </div>
+    </div>
+
+    <aside class="details-panel">
+      <h2 class="details-title" id="detailsTitle">Select a block</h2>
+      <p class="details-subtitle">List below is from the XLSX cemetery inventory fields. Payment state is color-coded.</p>
+      <div class="status-row" id="statusRow"></div>
+      <ul class="record-list" id="recordList">
+        <li class="record-item">
+          <p class="record-name">No block selected</p>
+          <p class="record-meta">Click any block on the map to view names and details.</p>
+        </li>
+      </ul>
+    </aside>
+  </div>
+</div>
+
+<script>
+
+// Seeded from the XLSX workbook (PHASE 1/2 sheet values).
+const blockRecords = {
+  AA: [
+    { name: "DELFIN ILAO", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "SOTERA UMALI", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "ALFRED ROTAIRO", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "PREVANDO MAGBUO", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  Z: [
+    { name: "ANTONIO UGALI RAMOS", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "FERMINA & PLACIDA BAUTISTA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "RAYMUNDO BAUTISTA", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "IRENEO TUMBAGA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  Y: [
+    { name: "GREGORIA B. TUMBAGA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "NICK CARANDANG", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "MIKE CARANDANG", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "System.Xml.XmlElement", layer: "a", payment: "unpaid", occupancy: "non-vacant", dob: "", dod: "", remarks: "Needs cleanup in source" }
+  ],
+  X: [
+    { name: "WILFREDO PEREZ", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "ISAGANI P. BLAS", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "BENITO RODRIGUEZ UMALI", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  W: [
+    { name: "NEMENCIO AUSTRIA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "MARIA DELLAMAS", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "JOVITO P. ERMITA", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  V: [
+    { name: "JOSE D. ALDAY", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "PABLO D. ESTERON", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "FRENCH DARREN A. MACALALAD", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  U: [
+    { name: "CIRIACO DAYANDAYAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "AQUILINA DAYANDAYAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "LAURELIO BAUTISTA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  T: [
+    { name: "CANDIDO DAYANDAYAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "CASIANA CASTILLO", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "SOFRONIO ATIENZA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  I: [
+    { name: "PAUL MYCO VILLENAS", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "NESTOR GUTIERREZ", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "CIRSACO K. VILLENA", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  H: [
+    { name: "ALBERTO CARINAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "LOREANO CARINAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "INCIANG CARINAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  G: [
+    { name: "MARIANO RODRIGUEZ", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "NEPHTALI E. ANCHOREZ", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "CLAUDIO M. MARTINEZ", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  F: [
+    { name: "MIGUEL GAMO", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "VENENCIA GAMO CARAIG", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "AUREA A. ESLOBO", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  E: [
+    { name: "PEDRO AVENA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "JUAN DAYANDAYAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "EVELYNDA DAYANDAYAN", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  D: [
+    { name: "VICENTE DE GUZMAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "EUFRONIA DE GUZMAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "ARSENIO VERTUCIO", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  C: [
+    { name: "OLIVER D. ENRIQUEZ", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "DENNIS VILLANOBO", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "ESTELITA BAMBAO", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  B: [
+    { name: "ANGELINA AGARA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "MANUEL AGARA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "FELIX CAMINA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  A: [
+    { name: "MARIANO MACALALAD", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "FELISA MACALALAD", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "REYNALDO MACALALAD", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "UNKNOWN", layer: "d", payment: "unpaid", occupancy: "vacant", dob: "", dod: "", remarks: "No clear record in source" }
+  ]
+};
+
+const blockFillStatus = {
+  AA: ["a", "", "", ""],
+  Z: ["a", "b", "", ""],
+  Y: ["a", "b", "c", "d"],
+  X: ["", "", "", ""],
+  W: ["a", "", "", ""],
+  V: ["a", "b", "c", ""],
+  U: ["", "", "", ""],
+  T: ["a", "", "", ""],
+  I: ["a", "b", "", ""],
+  H: ["a", "b", "c", ""],
+  G: ["", "", "", ""],
+  F: ["a", "", "", ""],
+  E: ["", "", "", ""],
+  D: ["a", "b", "", ""],
+  C: ["a", "", "", ""],
+  B: ["", "", "", ""],
+  A: ["a", "b", "c", "d"]
+};
+
+// STATUS FUNCTION
+function getStatus(blockName){
+  const layers = blockFillStatus[blockName];
+  if(!layers) return "vacant";
+
+  const filled = layers.filter(Boolean).length;
+
+  if(filled===0) return "vacant";
+  if(filled===4) return "occupied";
+  return "partial";
+}
+
+function getBlockOccupancy(blockName) {
+  const records = blockRecords[blockName] || [];
+  return records.length ? "non-vacant" : "vacant";
+}
+
+function renderDetails(blockName) {
+  const title = document.getElementById("detailsTitle");
+  const list = document.getElementById("recordList");
+  const statusRow = document.getElementById("statusRow");
+  const records = blockRecords[blockName] || [];
+  const occupancy = getBlockOccupancy(blockName);
+  const paidCount = records.filter(r => r.payment === "paid").length;
+  const unpaidCount = records.filter(r => r.payment === "unpaid").length;
+
+  title.textContent = "Block " + blockName + " Records";
+  statusRow.innerHTML = ""
+    + "<span class=\"badge " + (occupancy === "vacant" ? "badge-vacant" : "badge-nonvacant") + "\">"
+    + occupancy + "</span>"
+    + "<span class=\"badge badge-paid\">Paid: " + paidCount + "</span>"
+    + "<span class=\"badge badge-unpaid\">Unpaid: " + unpaidCount + "</span>";
+
+  if(!records.length){
+    list.innerHTML = ""
+      + "<li class=\"record-item\">"
+      + "<p class=\"record-name\">Vacant</p>"
+      + "<p class=\"record-meta\">No occupant found for this block in the current XLSX rows.</p>"
+      + "<div class=\"status-row\"><span class=\"badge badge-vacant\">vacant</span></div>"
+      + "</li>";
+    return;
+  }
+
+  list.innerHTML = records.map((record, index) => {
+    const paymentClass = record.payment === "paid" ? "badge-paid" : "badge-unpaid";
+    const occupancyClass = record.occupancy === "vacant" ? "badge-vacant" : "badge-nonvacant";
+    return ""
+      + "<li class=\"record-item\">"
+      + "<p class=\"record-name\">" + (index + 1) + ". " + record.name + "</p>"
+      + "<p class=\"record-meta\">Layer: " + record.layer.toUpperCase() + "</p>"
+      + "<p class=\"record-meta\">DOB: " + (record.dob || "Not listed in this sheet") + "</p>"
+      + "<p class=\"record-meta\">DOD: " + (record.dod || "Not listed in this sheet") + "</p>"
+      + "<p class=\"record-meta\">Remarks: " + (record.remarks || "-") + "</p>"
+      + "<div class=\"status-row\">"
+      + "<span class=\"badge " + paymentClass + "\">" + record.payment + "</span>"
+      + "<span class=\"badge " + occupancyClass + "\">" + record.occupancy + "</span>"
+      + "</div>"
+      + "</li>";
+  }).join("");
+}
+
+// APPLY COLORS + CLICK HANDLER
+document.querySelectorAll(".plot").forEach(plot => {
+  const blockName = plot.dataset.block;
+  const blockEl = plot.querySelector(".block");
+  const status = getStatus(blockName);
+
+  blockEl.classList.add(status);
+
+  blockEl.addEventListener("click", () => {
+    renderDetails(blockName);
+  });
+});
+
+renderDetails("A");
+
+</script>
+
+</body>
+</html>
