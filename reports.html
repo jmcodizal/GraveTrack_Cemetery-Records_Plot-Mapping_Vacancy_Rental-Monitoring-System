@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GroveTrack – Reports</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="reports.css"/>
+</head>
+<body>
+
+  <!-- Top navbar -->
+  <div class="top-nav">
+    <div class="brand">GR<span>A</span>VE<span>T</span>RACK</div>
+    <div class="nav-actions">
+      <button class="nav-btn btn-generate" onclick="generateReport()">Generate<br>Quick Report</button>
+      <button class="nav-btn btn-print"    onclick="printReport()">Print</button>
+      <button class="nav-btn btn-pdf"      onclick="exportPDF()">Export to<br>PDF</button>
+      <button class="nav-btn btn-excel"    onclick="exportExcel()">Export to<br>Excel</button>
+      <button class="btn-power" aria-label="Power off" onclick="confirmExit()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content area -->
+  <div class="content-area">
+
+    <div class="section-title">Reports Module</div>
+    <div class="section-subtitle">Select Report Type</div>
+
+    <!-- Report type grid -->
+    <div class="report-grid">
+
+      <button class="report-btn" onclick="selectReport(this, 'Burial Records Report')">
+        <span class="report-dot"></span>
+        <div class="report-text">
+          <div class="report-name">Burial Records Report</div>
+          <div class="report-desc">Complete list of all burial records</div>
+        </div>
+      </button>
+
+      <button class="report-btn" onclick="selectReport(this, 'Vacancy Report')">
+        <span class="report-dot"></span>
+        <div class="report-text">
+          <div class="report-name">Vacancy Report</div>
+          <div class="report-desc">Report of all vacant plots</div>
+        </div>
+      </button>
+
+      <button class="report-btn" onclick="selectReport(this, 'Occupancy Report')">
+        <span class="report-dot"></span>
+        <div class="report-text">
+          <div class="report-name">Occupancy Report</div>
+          <div class="report-desc">Report of all occupied plots</div>
+        </div>
+      </button>
+
+      <button class="report-btn" onclick="selectReport(this, 'Rental Payment Report')">
+        <span class="report-dot"></span>
+        <div class="report-text">
+          <div class="report-name">Rental Payment Report</div>
+          <div class="report-desc">Financial report of all payments</div>
+        </div>
+      </button>
+
+      <button class="report-btn" onclick="selectReport(this, 'Overdue Payment Report')">
+        <span class="report-dot"></span>
+        <div class="report-text">
+          <div class="report-name">Overdue Payment Report</div>
+          <div class="report-desc">List of overdue payments</div>
+        </div>
+      </button>
+
+      <button class="report-btn" onclick="selectReport(this, 'Monthly Summary Report')">
+        <span class="report-dot"></span>
+        <div class="report-text">
+          <div class="report-name">Monthly Summary Report</div>
+          <div class="report-desc">Monthly summary of activities</div>
+        </div>
+      </button>
+
+    </div>
+
+    <!-- Preview area -->
+    <div class="preview-box" id="previewBox">
+      <div class="preview-placeholder" id="previewPlaceholder">
+        <div>Report preview will appear here</div>
+        <div>Click "Generate Quick Report" to create the report</div>
+      </div>
+      <div class="preview-content" id="previewContent"></div>
+  <div class="bottom-nav">
+    <button class="bottom-btn bb-default" onclick="setActive(this)">Dashboard</button>
+    <button class="bottom-btn bb-default" onclick="setActive(this)">Burial Records</button>
+    <button class="bottom-btn bb-default" onclick="setActive(this)">Plot Mapping</button>
+    <button class="bottom-btn bb-default" onclick="setActive(this)">Vacancy<br>Monitoring</button>
+    <button class="bottom-btn bb-default" onclick="setActive(this)">Rental &amp;<br>Payment</button>
+    <button class="bottom-btn bb-active"  onclick="setActive(this)">Reports</button>
+  </div>
+
+  <div id="toastWrap"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+// ── SELECTED REPORT ──
+let selectedType = null;
+
+// ── SAMPLE DATA ──
+const reportData = {
+  'Burial Records Report': {
+    headers: ['Full Name', 'Date of Death', 'Date of Burial', 'Plot Location', 'Burial Type'],
+    rows: [
+      ['Juan dela Cruz',  '2026-01-10', '2026-01-13', 'Block A',  'Traditional'],
+      ['Maria Santos',    '2026-02-05', '2026-02-08', 'Block B',  'Cremation'],
+      ['Pedro Reyes',     '2026-03-01', '2026-03-04', 'Block C',  'Traditional'],
+      ['Ana Gonzales',    '2026-03-14', '2026-03-17', 'Block A',  'Traditional'],
+    ]
+  },
+  'Vacancy Report': {
+    headers: ['Plot ID', 'Block', 'Section', 'Type', 'Status'],
+    rows: [
+      ['A-1-2', 'A', 'Section 1', 'Ground',    'Vacant'],
+      ['A-2-2', 'A', 'Section 2', 'Apartment', 'Vacant'],
+      ['A-2-3', 'A', 'Section 2', 'Lawn',      'Vacant'],
+      ['B-1-2', 'B', 'Section 1', 'Lawn',      'Vacant'],
+    ]
+  },
+  'Occupancy Report': {
+    headers: ['Plot ID', 'Block', 'Section', 'Type', 'Occupant'],
+    rows: [
+      ['A-1-1', 'A', 'Section 1', 'Ground',    'Juan dela Cruz'],
+      ['A-2-1', 'A', 'Section 2', 'Ground',    'Maria Santos'],
+      ['B-2-1', 'B', 'Section 2', 'Lawn',      'Pedro Reyes'],
+      ['B-2-2', 'B', 'Section 2', 'Ground',    'Ana Gonzales'],
+    ]
+  },
+  'Rental Payment Report': {
+    headers: ['Deceased Name', 'Plot', 'Amount Paid', 'Payment Date', 'Status'],
+    rows: [
+      ['Juan dela Cruz', 'Block A', '₱5,000', '2026-01-15', 'Paid'],
+      ['Maria Santos',   'Block B', '₱2,500', '2026-02-10', 'Paid'],
+      ['Pedro Reyes',    'Block C', '₱1,200', '2026-03-11', 'Pending'],
+      ['Ana Gonzales',   'Block A', '₱5,000', '2026-03-18', 'Paid'],
+    ]
+  },
+  'Overdue Payment Report': {
+    headers: ['Deceased Name', 'Plot', 'Amount Due', 'Due Date', 'Days Overdue'],
+    rows: [
+      ['Pedro Reyes',  'Block C', '₱1,200', '2026-02-01', '56 days'],
+      ['Jose Mendoza', 'Block D', '₱3,000', '2026-01-15', '73 days'],
+    ]
+  },
+  'Monthly Summary Report': {
+    headers: ['Month', 'New Burials', 'Payments Collected', 'Vacant Plots', 'Overdue'],
+    rows: [
+      ['January 2026',  '3', '₱15,000', '54', '1'],
+      ['February 2026', '5', '₱22,500', '52', '2'],
+      ['March 2026',    '4', '₱18,000', '52', '2'],
+    ]
+  },
+};
+
+// ── SELECT REPORT ──
+function selectReport(btn, type) {
+  document.querySelectorAll('.report-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedType = type;
+}
+
+// ── GENERATE REPORT ──
+function generateReport() {
+  if (!selectedType) {
+    toast('Please select a report type first.', '#ef4444');
+    return;
+  }
+
+  const data = reportData[selectedType];
+  const placeholder = document.getElementById('previewPlaceholder');
+  const content = document.getElementById('previewContent');
+
+  placeholder.style.display = 'none';
+  content.style.display = 'block';
+
+  let html = `<div class="preview-title">${selectedType}</div>`;
+  html += '<table><thead><tr>';
+  data.headers.forEach(h => { html += `<th>${h}</th>`; });
+  html += '</tr></thead><tbody>';
+  data.rows.forEach(row => {
+    html += '<tr>';
+    row.forEach(cell => { html += `<td>${cell}</td>`; });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+
+  content.innerHTML = html;
+  toast(`${selectedType} generated.`, '#22c55e');
+}
+
+// ── PRINT ──
+function printReport() {
+  if (!selectedType) { toast('Please generate a report first.', '#ef4444'); return; }
+  window.print();
+}
+
+// ── EXPORT PDF ──
+function exportPDF() {
+  if (!selectedType) { toast('Please generate a report first.', '#ef4444'); return; }
+  toast('Exporting to PDF…', '#2563eb');
+}
+
+// ── EXPORT EXCEL ──
+function exportExcel() {
+  if (!selectedType) { toast('Please generate a report first.', '#ef4444'); return; }
+  toast('Exporting to Excel…', '#2563eb');
+}
+
+// ── BOTTOM NAV ──
+function setActive(el) {
+  document.querySelectorAll('.bottom-btn').forEach(b => {
+    b.classList.remove('bb-active');
+    b.classList.add('bb-default');
+  });
+  el.classList.remove('bb-default');
+  el.classList.add('bb-active');
+}
+
+// ── POWER ──
+function confirmExit() {
+  if (confirm('Are you sure you want to exit?')) window.close();
+}
+
+// ── TOAST ──
+function toast(msg, color = '#2563eb') {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.style.borderLeft = `3px solid ${color}`;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+  </script>
+</body>
+</html>

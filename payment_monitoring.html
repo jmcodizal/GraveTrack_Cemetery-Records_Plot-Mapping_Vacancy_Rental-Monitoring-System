@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GroveTrack – Payment Monitoring</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="payment_monitoring.css"/>
+</head>
+<body>
+
+  <!-- Top navbar -->
+  <div class="top-nav">
+    <div class="brand">GR<span>A</span>VE<span>T</span>RACK</div>
+    <div class="nav-actions">
+      <button class="nav-btn btn-reminder"  onclick="sendReminder()">Send<br>reminder</button>
+      <button class="nav-btn btn-financial" onclick="generateFinancial()">Generate<br>Financial<br>Report</button>
+      <button class="nav-btn btn-receipt"   onclick="printReceipt()">Print Receipt</button>
+      <button class="btn-power" aria-label="Power off" onclick="confirmExit()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1012.728 0M12 3v9"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content area -->
+  <div class="content-area">
+
+    <div class="section-title">Payment Monitoring Dashboard</div>
+
+    <!-- Filter tabs -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterRecords('all', this)">All Records</button>
+      <button class="filter-tab" onclick="filterRecords('paid', this)">Fully paid records</button>
+      <button class="filter-tab" onclick="filterRecords('upcoming', this)">Upcoming Due dates</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Deceased Name</th>
+            <th>Plot Location</th>
+            <th>Rental Period</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState">No records found.</div>
+    </div>
+
+  </div>
+
+  <!-- Bottom navigation -->
+  <div class="bottom-nav">
+    <button class="bottom-btn bb-default" onclick="setActive(this)">Dashboard</button>
+    <button class="bottom-btn bb-default" onclick="setActive(this)">Burial Records</button>
+    <button class="bottom-btn bb-default" onclick="setActive(this)">Plot Mapping</button>
+    <button class="bottom-btn bb-default" onclick="setActive(this)">Vacancy<br>Monitoring</button>
+    <button class="bottom-btn bb-active"  onclick="setActive(this)">Rental &amp;<br>Payment</button>
+    <button class="bottom-btn bb-default" onclick="setActive(this)">Reports</button>
+  </div>
+
+  <div id="toastWrap"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const records = [
+      { name: 'Juan dela Cruz',  plot: 'Block A - Lot 1', period: 'Jan 2026 – Jan 2027', amount: '₱5,000',  status: 'Paid',     due: null },
+      { name: 'Maria Santos',    plot: 'Block B - Lot 2', period: 'Feb 2026 – Feb 2027', amount: '₱2,500',  status: 'Paid',     due: null },
+      { name: 'Pedro Reyes',     plot: 'Block C - Lot 3', period: 'Mar 2026 – Mar 2027', amount: '₱1,200',  status: 'Pending',  due: '2026-04-01' },
+      { name: 'Ana Gonzales',    plot: 'Block A - Lot 4', period: 'Mar 2026 – Mar 2027', amount: '₱5,000',  status: 'Paid',     due: null },
+      { name: 'Jose Mendoza',    plot: 'Block D - Lot 1', period: 'Jan 2026 – Jan 2027', amount: '₱3,000',  status: 'Overdue',  due: '2026-02-01' },
+      { name: 'Luisa Bautista',  plot: 'Block B - Lot 5', period: 'Apr 2026 – Apr 2027', amount: '₱4,500',  status: 'Upcoming', due: '2026-04-15' },
+      { name: 'Carlos Villanueva', plot: 'Block C - Lot 2', period: 'Apr 2026 – Apr 2027', amount: '₱2,000', status: 'Upcoming', due: '2026-04-20' },
+    ];
+
+    const statusClass = {
+      'Paid':     'badge-paid',
+      'Pending':  'badge-pending',
+      'Overdue':  'badge-overdue',
+      'Upcoming': 'badge-upcoming',
+    };
+
+    function renderTable(data) {
+      const body = document.getElementById('tableBody');
+      const empty = document.getElementById('emptyState');
+      body.innerHTML = '';
+      if (!data.length) { empty.style.display = 'flex'; return; }
+      empty.style.display = 'none';
+      data.forEach((r, i) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.name}</td>
+          <td>${r.plot}</td>
+          <td>${r.period}</td>
+          <td>${r.amount}</td>
+          <td><span class="badge-status ${statusClass[r.status]}">${r.status}</span></td>
+          <td>
+            <div class="action-btns">
+              <button class="action-btn btn-view-rec" onclick="viewRecord(${i})">View</button>
+              <button class="action-btn btn-send"     onclick="sendOne('${r.name}')">Remind</button>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function filterRecords(type, btn) {
+      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      let filtered;
+      if (type === 'paid')     filtered = records.filter(r => r.status === 'Paid');
+      else if (type === 'upcoming') filtered = records.filter(r => r.status === 'Upcoming' || r.status === 'Pending');
+      else filtered = records;
+      renderTable(filtered);
+    }
+
+    function viewRecord(i)       { toast(`Viewing record for ${records[i].name}`, '#2563eb'); }
+    function sendOne(name)       { toast(`Reminder sent to contact of ${name}`, '#22c55e'); }
+    function sendReminder()      { toast('Reminders sent to all pending/overdue contacts.', '#22c55e'); }
+    function generateFinancial() { toast('Generating Financial Report…', '#2563eb'); }
+    function printReceipt()      { window.print(); }
+    function confirmExit()       { if (confirm('Are you sure you want to exit?')) window.close(); }
+
+    function setActive(el) {
+      document.querySelectorAll('.bottom-btn').forEach(b => {
+        b.classList.remove('bb-active');
+        b.classList.add('bb-default');
+      });
+      el.classList.remove('bb-default');
+      el.classList.add('bb-active');
+    }
+
+    function toast(msg, color = '#2563eb') {
+      const wrap = document.getElementById('toastWrap');
+      const el = document.createElement('div');
+      el.className = 'toast-item';
+      el.style.borderLeft = `3px solid ${color}`;
+      el.textContent = msg;
+      wrap.appendChild(el);
+      setTimeout(() => el.remove(), 3000);
+    }
+
+    renderTable(records);
+  </script>
+</body>
+</html>
