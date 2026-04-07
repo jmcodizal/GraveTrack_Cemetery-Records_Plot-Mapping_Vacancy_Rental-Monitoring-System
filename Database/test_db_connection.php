@@ -1,7 +1,7 @@
 <?php
 require_once 'db_connector.php';
 
-$db = new Database();
+$db = new db_connector();
 $conn = $db->connect();
 
 if ($conn) {

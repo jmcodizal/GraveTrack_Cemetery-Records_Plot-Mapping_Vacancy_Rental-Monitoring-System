@@ -1,4 +1,12 @@
+<?php 
+session_start(); 
+if (!isset($_SESSION['user'])) { 
+    header('Location: login.php'); 
+    exit; 
+} 
+?> 
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -76,11 +84,11 @@
 
   <!-- Bottom navigation -->
   <div class="bottom-nav">
-    <button class="bottom-btn bb-default" onclick="window.location.href='dashboard.html';setActive(this)">Dashboard</button>
-    <button class="bottom-btn bb-active"  onclick="window.location.href='burial_records.html'; setActive(this); ">Burial Records</button>
+    <button class="bottom-btn bb-active" onclick="window.location.href='dashboard.html';setActive(this)">Dashboard</button>
+    <button class="bottom-btn bb-default"  onclick="window.location.href='burial_records.php'; setActive(this); ">Burial Records</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='plot_mapping.html'; setActive(this)">Plot Mapping</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='vacancy.html'; setActive(this)">Vacancy<br>Monitoring</button>
-    <button class="bottom-btn bb-default" onclick="window.location.href='rental_payment.html'; setActive(this)">Rental &amp;<br>Payment</button>
+    <button class="bottom-btn bb-default" onclick="window.location.href='payment_monitoring.html'; setActive(this)">Rental &amp;<br>Payment</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='reports.html'; setActive(this)">Reports</button>
   </div>
 

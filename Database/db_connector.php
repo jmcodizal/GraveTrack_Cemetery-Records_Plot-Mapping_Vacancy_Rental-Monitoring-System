@@ -1,5 +1,5 @@
 <?php
-class Database {
+class db_connector {
     private $host = "localhost";
     private $db_name = "gravetrack_db";
     private $username = "root";
@@ -23,10 +23,32 @@ class Database {
             $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
         } catch (PDOException $e) {
-            die("Database Connection Failed: " . $e->getMessage());
+            throw new PDOException("Database Connection Failed: " . $e->getMessage());
         }
 
         return $this->conn;
     }
+
+    public function getBurialRecords($search = '') {
+        try {
+            $conn = $this->connect();
+            $sql = "SELECT * FROM burial_records_view";
+            $params = [];
+            if ($search) {
+            $sql .= " WHERE full_name LIKE :search OR full_name LIKE :search OR plot_code LIKE :search";
+
+                $params[':search'] = "%$search%";
+            }
+            $sql .= " ORDER BY date_of_death DESC LIMIT 100";
+
+            $stmt = $conn->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            error_log("Burial records query failed: " . $e->getMessage());
+            return [];
+        }
+    }
 }
 ?>
+
