@@ -1,0 +1,1 @@
+- [x] Step 1: Create api/get_vacancies.php (PHP endpoint querying plots table with JOINs, filters)

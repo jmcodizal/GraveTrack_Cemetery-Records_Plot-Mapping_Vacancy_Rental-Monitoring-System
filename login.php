@@ -46,36 +46,7 @@
 </main>
 
 <div class="toast-wrap" id="toastWrap"></div>
+<script src="js/login.js"></script>
 
-<script>
-  const body = document.body;
-  const themeToggle = document.getElementById('themeToggle');
-  if (localStorage.getItem('theme') === 'dark') body.classList.add('dark');
-  themeToggle.onclick = () => {
-    body.classList.toggle('dark');
-    localStorage.setItem('theme', body.classList.contains('dark') ? 'dark' : 'light');
-  };
-
-  function togglePass() {
-    const input = document.getElementById('login-password');
-    input.type = input.type === 'password' ? 'text' : 'password';
-  }
-
-  function toast(msg) {
-    const wrap = document.getElementById('toastWrap');
-    const el = document.createElement('div');
-    el.className = 'toast-item';
-    el.textContent = msg;
-    wrap.appendChild(el);
-    setTimeout(() => el.remove(), 3000);
-  }
-
-  function handleLogin() {
-    const name = document.getElementById('login-name').value.trim();
-    const pass = document.getElementById('login-password').value;
-    if (!name || !pass) return toast('Please fill in all fields.');
-    toast('Welcome back! Logging you in…');
-  }
-</script>
 </body>
 </html>

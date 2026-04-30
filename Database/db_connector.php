@@ -1,5 +1,5 @@
 <?php
-class Database {
+class db_connector {
     private $host = "localhost";
     private $db_name = "gravetrack_db";
     private $username = "root";
@@ -23,7 +23,7 @@ class Database {
             $this->conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
         } catch (PDOException $e) {
-            die("Database Connection Failed: " . $e->getMessage());
+            throw new Exception("Database Connection Failed: " . $e->getMessage());
         }
 
         return $this->conn;

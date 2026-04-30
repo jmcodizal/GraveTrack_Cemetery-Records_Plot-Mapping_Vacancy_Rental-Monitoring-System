@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cemetery Map UI</title>
+
+<link rel="stylesheet" href="styles/cemetery_map_style.css">
+</head>
+
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <h1 class="header-title">GraveTrack Cemetery Map</h1>
+    <p class="header-subtitle">Click any block to view records in a card-based layout.</p>
+  </div>
+  <button class="header-chip" type="button" aria-label="Cemetery phase">Phase 1 and 2</button>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><div class="box occupied"></div>Occupied</div>
+  <div class="legend-item"><div class="box partial"></div>Partial</div>
+  <div class="legend-item"><div class="box vacant"></div>Vacant</div>
+</div>
+
+<!-- UNIVERSAL SEARCH -->
+<div class="search-bar-wrap" id="searchWrap">
+  <span class="search-icon-abs">&#128269;</span>
+  <input
+    type="text"
+    id="universalSearch"
+    placeholder="Search any name across all blocks…"
+    autocomplete="off"
+    aria-label="Search burial records"
+    aria-haspopup="listbox"
+  >
+  <button class="search-clear" id="searchClear" title="Clear" aria-label="Clear search">&#215;</button>
+  <div class="search-dropdown" id="searchDropdown" role="listbox"></div>
+</div>
+
+<!-- SEARCH RESULTS MODAL (shown when multiple results) -->
+<div class="search-results-modal-overlay" id="searchResultsModal">
+  <div class="search-results-modal">
+    <div class="srm-header">
+      <h2 class="srm-title" id="srmTitle">Search Results</h2>
+      <span class="srm-query-tag" id="srmQueryTag"></span>
+      <button class="srm-close" id="srmClose" title="Close">&times;</button>
+    </div>
+    <div class="srm-body" id="srmBody"></div>
+  </div>
+</div>
+
+<div class="cemetery-map">
+  <div class="map-layout">
+    <div class="map-canvas">
+      <div class="map-row">
+        <div class="plot" data-block="AA">
+          <div class="plot-label">AA</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-lg"></div>
+
+        <div class="block-short" aria-hidden="true"></div>
+
+        <div class="divider" aria-hidden="true"></div>
+
+        <div class="plot" data-block="Z">
+          <div class="plot-label">Z</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="Y">
+          <div class="plot-label">Y</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="X">
+          <div class="plot-label">X</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="W">
+          <div class="plot-label">W</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="V">
+          <div class="plot-label">V</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="U">
+          <div class="plot-label">U</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="T">
+          <div class="plot-label">T</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="divider" aria-hidden="true"></div>
+
+        <div class="plot" data-block="I">
+          <div class="plot-label">I</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="H">
+          <div class="plot-label">H</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="G">
+          <div class="plot-label">G</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="F">
+          <div class="plot-label">F</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="E">
+          <div class="plot-label">E</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="D">
+          <div class="plot-label">D</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="C">
+          <div class="plot-label">C</div>
+          <div class="block"></div>
+        </div>
+        <div class="plot" data-block="B">
+          <div class="plot-label">B</div>
+          <div class="block"></div>
+        </div>
+
+        <div class="spacer-md"></div>
+
+        <div class="plot" data-block="A">
+          <div class="plot-label">A</div>
+          <div class="block"></div>
+        </div>
+      </div>
+
+      <div class="fence-row" aria-hidden="true">
+        <div class="fence-gate"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-gate"></div>
+        <div class="fence-segment"></div>
+        <div class="fence-gate"></div>
+        <div class="fence-segment"></div>
+      </div>
+    </div>
+
+    <aside class="details-panel">
+      <h2 class="details-title" id="detailsTitle">Select a block</h2>
+      <p class="details-subtitle">List below is from the XLSX cemetery inventory fields. Payment state is color-coded.</p>
+      <div class="status-row" id="statusRow"></div>
+      <ul class="record-list" id="recordList">
+        <li class="record-item">
+          <p class="record-name">No block selected</p>
+          <p class="record-meta">Click any block on the map to view names and details.</p>
+        </li>
+      </ul>
+    </aside>
+  </div>
+
+  <!-- Modal for detailed block view -->
+  <div class="modal-overlay" id="detailsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Block Records</h2>
+        <button class="modal-close-btn" id="modalCloseBtn">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Records will be rendered here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+// Seeded from the XLSX workbook (PHASE 1/2 sheet values).
+const blockRecords = {
+  AA: [
+    { name: "DELFIN ILAO", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "SOTERA UMALI", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "ALFRED ROTAIRO", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "PREVANDO MAGBUO", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  Z: [
+    { name: "ANTONIO UGALI RAMOS", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "FERMINA & PLACIDA BAUTISTA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "RAYMUNDO BAUTISTA", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "IRENEO TUMBAGA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  Y: [
+    { name: "GREGORIA B. TUMBAGA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "NICK CARANDANG", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "MIKE CARANDANG", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "System.Xml.XmlElement", layer: "a", payment: "unpaid", occupancy: "non-vacant", dob: "", dod: "", remarks: "Needs cleanup in source" }
+  ],
+  X: [
+    { name: "WILFREDO PEREZ", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "ISAGANI P. BLAS", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "BENITO RODRIGUEZ UMALI", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  W: [
+    { name: "NEMENCIO AUSTRIA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "MARIA DELLAMAS", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "JOVITO P. ERMITA", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  V: [
+    { name: "JOSE D. ALDAY", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "PABLO D. ESTERON", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "FRENCH DARREN A. MACALALAD", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  U: [
+    { name: "CIRIACO DAYANDAYAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "AQUILINA DAYANDAYAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "LAURELIO BAUTISTA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  T: [
+    { name: "CANDIDO DAYANDAYAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "CASIANA CASTILLO", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "SOFRONIO ATIENZA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  I: [
+    { name: "PAUL MYCO VILLENAS", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "NESTOR GUTIERREZ", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "CIRSACO K. VILLENA", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  H: [
+    { name: "ALBERTO CARINAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "LOREANO CARINAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "INCIANG CARINAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  G: [
+    { name: "MARIANO RODRIGUEZ", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "NEPHTALI E. ANCHOREZ", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "CLAUDIO M. MARTINEZ", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  F: [
+    { name: "MIGUEL GAMO", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "VENENCIA GAMO CARAIG", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "AUREA A. ESLOBO", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  E: [
+    { name: "PEDRO AVENA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "JUAN DAYANDAYAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "EVELYNDA DAYANDAYAN", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  D: [
+    { name: "VICENTE DE GUZMAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "EUFRONIA DE GUZMAN", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "ARSENIO VERTUCIO", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  C: [
+    { name: "OLIVER D. ENRIQUEZ", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "DENNIS VILLANOBO", layer: "b", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "ESTELITA BAMBAO", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  B: [
+    { name: "ANGELINA AGARA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "MANUEL AGARA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "FELIX CAMINA", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" }
+  ],
+  A: [
+    { name: "MARIANO MACALALAD", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "FELISA MACALALAD", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "REYNALDO MACALALAD", layer: "a", payment: "paid", occupancy: "non-vacant", dob: "", dod: "", remarks: "" },
+    { name: "UNKNOWN", layer: "d", payment: "unpaid", occupancy: "vacant", dob: "", dod: "", remarks: "No clear record in source" }
+  ]
+};
+
+const blockFillStatus = {
+  AA: ["a", "", "", ""],
+  Z: ["a", "b", "", ""],
+  Y: ["a", "b", "c", "d"],
+  X: ["", "", "", ""],
+  W: ["a", "", "", ""],
+  V: ["a", "b", "c", ""],
+  U: ["", "", "", ""],
+  T: ["a", "", "", ""],
+  I: ["a", "b", "", ""],
+  H: ["a", "b", "c", ""],
+  G: ["", "", "", ""],
+  F: ["a", "", "", ""],
+  E: ["", "", "", ""],
+  D: ["a", "b", "", ""],
+  C: ["a", "", "", ""],
+  B: ["", "", "", ""],
+  A: ["a", "b", "c", "d"]
+};
+
+// STATUS FUNCTION
+function getStatus(blockName){
+  const layers = blockFillStatus[blockName];
+  if(!layers) return "vacant";
+
+  const filled = layers.filter(Boolean).length;
+
+  if(filled===0) return "vacant";
+  if(filled===4) return "occupied";
+  return "partial";
+}
+
+function getBlockOccupancy(blockName) {
+  const records = blockRecords[blockName] || [];
+  return records.length ? "non-vacant" : "vacant";
+}
+
+function renderDetails(blockName) {
+  const title = document.getElementById("detailsTitle");
+  const list = document.getElementById("recordList");
+  const statusRow = document.getElementById("statusRow");
+  const records = blockRecords[blockName] || [];
+  const occupancy = getBlockOccupancy(blockName);
+  const paidCount = records.filter(r => r.payment === "paid").length;
+  const unpaidCount = records.filter(r => r.payment === "unpaid").length;
+
+  title.textContent = "Block " + blockName + " Records";
+  statusRow.innerHTML = ""
+    + "<span class=\"badge " + (occupancy === "vacant" ? "badge-vacant" : "badge-nonvacant") + "\">"
+    + occupancy + "</span>"
+    + "<span class=\"badge badge-paid\">Paid: " + paidCount + "</span>"
+    + "<span class=\"badge badge-unpaid\">Unpaid: " + unpaidCount + "</span>";
+
+  if(!records.length){
+    list.innerHTML = ""
+      + "<li class=\"record-item\">"
+      + "<p class=\"record-name\">Vacant</p>"
+      + "<p class=\"record-meta\">No occupant found for this block in the current XLSX rows.</p>"
+      + "<div class=\"status-row\"><span class=\"badge badge-vacant\">vacant</span></div>"
+      + "</li>";
+    return;
+  }
+
+  list.innerHTML = records.map((record, index) => {
+    const paymentClass = record.payment === "paid" ? "badge-paid" : "badge-unpaid";
+    const occupancyClass = record.occupancy === "vacant" ? "badge-vacant" : "badge-nonvacant";
+    return ""
+      + "<li class=\"record-item\">"
+      + "<p class=\"record-name\">" + (index + 1) + ". " + record.name + "</p>"
+      + "<p class=\"record-meta\">Layer: " + record.layer.toUpperCase() + "</p>"
+      + "<p class=\"record-meta\">DOB: " + (record.dob || "Not listed in this sheet") + "</p>"
+      + "<p class=\"record-meta\">DOD: " + (record.dod || "Not listed in this sheet") + "</p>"
+      + "<p class=\"record-meta\">Remarks: " + (record.remarks || "-") + "</p>"
+      + "<div class=\"status-row\">"
+      + "<span class=\"badge " + paymentClass + "\">" + record.payment + "</span>"
+      + "<span class=\"badge " + occupancyClass + "\">" + record.occupancy + "</span>"
+      + "</div>"
+      + "</li>";
+  }).join("");
+}
+
+// MODAL DETAIL VIEW FUNCTIONS
+const modalOverlay = document.getElementById("detailsModal");
+const modalCloseBtn = document.getElementById("modalCloseBtn");
+const modalBody = document.getElementById("modalBody");
+const modalTitle = document.getElementById("modalTitle");
+
+function renderDetailedModal(blockName) {
+  const records = blockRecords[blockName] || [];
+  const occupancy = getBlockOccupancy(blockName);
+  
+  modalTitle.textContent = "Block " + blockName + " - Detailed Records";
+  
+  if(!records.length) {
+    modalBody.innerHTML = ""
+      + "<div class=\"empty-message\">"
+      + "<h3 class=\"empty-message-title\">No Records Found</h3>"
+      + "<p class=\"empty-message-text\">This block has no occupants in the cemetery records.</p>"
+      + "</div>";
+    return;
+  }
+  
+  const cardsHTML = records.map((record, index) => {
+    const paymentClass = record.payment === "paid" ? "badge-paid" : "badge-unpaid";
+    const occupancyClass = record.occupancy === "vacant" ? "badge-vacant" : "badge-nonvacant";
+    return ""
+      + "<div class=\"record-card\">"
+      + "<div class=\"record-card-index\">Entry " + (index + 1) + " of " + records.length + "</div>"
+      + "<p class=\"record-card-name\">" + record.name + "</p>"
+      + "<p class=\"record-card-meta\"><strong>Layer:</strong> " + record.layer.toUpperCase() + "</p>"
+      + (record.dob ? "<p class=\"record-card-meta\"><strong>DOB:</strong> " + record.dob + "</p>" : "")
+      + (record.dod ? "<p class=\"record-card-meta\"><strong>DOD:</strong> " + record.dod + "</p>" : "")
+      + (record.remarks ? "<p class=\"record-card-meta\"><strong>Remarks:</strong> " + record.remarks + "</p>" : "")
+      + "<div class=\"record-card-badges\">"
+      + "<span class=\"badge " + paymentClass + "\">" + record.payment + "</span>"
+      + "<span class=\"badge " + occupancyClass + "\">" + record.occupancy + "</span>"
+      + "</div>"
+      + "</div>";
+  }).join("");
+  
+  modalBody.innerHTML = "<div class=\"records-grid\">" + cardsHTML + "</div>";
+}
+
+function openDetailedModal(blockName) {
+  renderDetailedModal(blockName);
+  modalOverlay.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeDetailedModal() {
+  modalOverlay.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+// APPLY COLORS + CLICK HANDLER
+document.querySelectorAll(".plot").forEach(plot => {
+  const blockName = plot.dataset.block;
+  const blockEl = plot.querySelector(".block");
+  const status = getStatus(blockName);
+
+  blockEl.classList.add(status);
+
+  blockEl.addEventListener("click", () => {
+    renderDetails(blockName);
+    openDetailedModal(blockName);
+  });
+});
+
+// MODAL EVENTS
+modalCloseBtn.addEventListener("click", closeDetailedModal);
+modalOverlay.addEventListener("click", (e) => {
+  if(e.target === modalOverlay) closeDetailedModal();
+});
+
+// Close on Escape key
+document.addEventListener("keydown", (e) => {
+  if(e.key === "Escape" && modalOverlay.classList.contains("active")) {
+    closeDetailedModal();
+  }
+});
+
+renderDetails("A");
+
+// ============================================================
+//  UNIVERSAL SEARCH
+// ============================================================
+
+const searchInput       = document.getElementById("universalSearch");
+const searchDropdown    = document.getElementById("searchDropdown");
+const searchClear       = document.getElementById("searchClear");
+const searchResultsModal= document.getElementById("searchResultsModal");
+const srmBody           = document.getElementById("srmBody");
+const srmTitle          = document.getElementById("srmTitle");
+const srmQueryTag       = document.getElementById("srmQueryTag");
+const srmClose          = document.getElementById("srmClose");
+
+// Build flat search index from all blockRecords
+function buildSearchIndex() {
+  const index = [];
+  Object.entries(blockRecords).forEach(([block, records]) => {
+    const status = getStatus(block);
+    records.forEach(record => {
+      index.push({ block, status, ...record });
+    });
+  });
+  return index;
+}
+
+const searchIndex = buildSearchIndex();
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function highlightMatch(text, query) {
+  const esc = escapeRegex(query);
+  return text.replace(new RegExp(`(${esc})`, "gi"), "<em>$1</em>");
+}
+
+function doSearch(query) {
+  const q = query.trim();
+  searchClear.style.display = q ? "block" : "none";
+
+  if (!q || q.length < 2) {
+    closeDropdown();
+    return;
+  }
+
+  const ql = q.toLowerCase();
+  const results = searchIndex.filter(r =>
+    r.name && r.name.toLowerCase().includes(ql)
+  );
+
+  renderDropdown(results, q);
+}
+
+function renderDropdown(results, query) {
+  if (!results.length) {
+    searchDropdown.innerHTML =
+      `<div class="search-no-results">No records found matching "<strong>${query}</strong>"</div>`;
+    searchDropdown.classList.add("open");
+    return;
+  }
+
+  // Show up to 6 preview items in dropdown; "See all N results" triggers full modal
+  const PREVIEW_LIMIT = 6;
+  const preview = results.slice(0, PREVIEW_LIMIT);
+
+  const countHtml = `<div class="search-result-count">${results.length} result${results.length !== 1 ? "s" : ""} found</div>`;
+
+  const itemsHtml = preview.map(r => {
+    const payBadge = r.payment === "paid"
+      ? `<span class="badge badge-paid" style="font-size:10px;padding:2px 8px">Paid</span>`
+      : `<span class="badge badge-unpaid" style="font-size:10px;padding:2px 8px">Unpaid</span>`;
+    return `<div class="search-result-item" role="option" tabindex="0"
+        data-block="${r.block}"
+        onclick="selectResult('${r.block}', '${query.replace(/'/g,"\\'")}', event)"
+        onkeydown="if(event.key==='Enter')selectResult('${r.block}','${query.replace(/'/g,"\\'")}',event)">
+      <div class="sri-block-badge ${r.status}">${r.block}</div>
+      <div class="sri-info">
+        <div class="sri-name">${highlightMatch(r.name, query)}</div>
+        <div class="sri-meta">Block ${r.block} &middot; Layer ${r.layer.toUpperCase()} &middot; ${payBadge}</div>
+      </div>
+      <span class="sri-arrow">&#8594;</span>
+    </div>`;
+  }).join("");
+
+  const moreHtml = results.length > PREVIEW_LIMIT
+    ? `<div class="search-result-item" style="justify-content:center;color:var(--blue-500);font-weight:700;font-size:13px;"
+           role="option" tabindex="0"
+           onclick="openSearchModal(${JSON.stringify(results)}, '${query.replace(/'/g,"\\'")}')">
+         View all ${results.length} results &rarr;
+       </div>`
+    : "";
+
+  searchDropdown.innerHTML = countHtml + itemsHtml + moreHtml;
+  searchDropdown.classList.add("open");
+}
+
+function closeDropdown() {
+  searchDropdown.classList.remove("open");
+  searchDropdown.innerHTML = "";
+}
+
+function pulseBlock(blockName) {
+  const plotEl = document.querySelector(`.plot[data-block="${blockName}"]`);
+  if (!plotEl) return;
+  const blockEl = plotEl.querySelector(".block");
+  document.querySelectorAll(".block.search-highlight").forEach(el => el.classList.remove("search-highlight"));
+  plotEl.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+  setTimeout(() => {
+    blockEl.classList.add("search-highlight");
+    setTimeout(() => blockEl.classList.remove("search-highlight"), 900);
+  }, 200);
+}
+
+// Called when user clicks a single dropdown result
+function selectResult(blockName, query, evt) {
+  closeDropdown();
+  searchInput.value = "";
+  searchClear.style.display = "none";
+  renderDetails(blockName);
+  openDetailedModal(blockName);
+  pulseBlock(blockName);
+}
+
+// Open the full multi-result modal
+function openSearchModal(results, query) {
+  closeDropdown();
+  searchInput.value = "";
+  searchClear.style.display = "none";
+
+  srmTitle.textContent = `${results.length} result${results.length !== 1 ? "s" : ""} found`;
+  srmQueryTag.textContent = `"${query}"`;
+
+  srmBody.innerHTML = results.map(r => {
+    const payBadge = r.payment === "paid"
+      ? `<span class="badge badge-paid" style="font-size:10px;padding:2px 8px">Paid</span>`
+      : `<span class="badge badge-unpaid" style="font-size:10px;padding:2px 8px">Unpaid</span>`;
+    const occBadge = r.occupancy === "vacant"
+      ? `<span class="badge badge-vacant" style="font-size:10px;padding:2px 8px">Vacant</span>`
+      : `<span class="badge badge-nonvacant" style="font-size:10px;padding:2px 8px">Non-vacant</span>`;
+    return `<div class="srm-result-card" onclick="goToBlock('${r.block}')">
+      <div class="srm-block-badge ${r.status}">${r.block}</div>
+      <div class="srm-info">
+        <p class="srm-name">${highlightMatch(r.name, query)}</p>
+        <div class="srm-meta">
+          Block <strong>${r.block}</strong>
+          &middot; Layer <strong>${r.layer.toUpperCase()}</strong>
+          ${payBadge} ${occBadge}
+          ${r.remarks ? `<span style="color:#888">· ${r.remarks}</span>` : ""}
+        </div>
+      </div>
+      <button class="srm-go-btn">View Block &#8594;</button>
+    </div>`;
+  }).join("");
+
+  searchResultsModal.classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function goToBlock(blockName) {
+  closeSearchModal();
+  renderDetails(blockName);
+  openDetailedModal(blockName);
+  pulseBlock(blockName);
+}
+
+function closeSearchModal() {
+  searchResultsModal.classList.remove("active");
+  document.body.style.overflow = "";
+}
+
+// Events
+searchInput.addEventListener("input", e => doSearch(e.target.value));
+
+searchInput.addEventListener("keydown", e => {
+  if (e.key === "Escape") { closeDropdown(); searchInput.blur(); }
+});
+
+searchClear.addEventListener("click", () => {
+  searchInput.value = "";
+  searchClear.style.display = "none";
+  closeDropdown();
+  searchInput.focus();
+});
+
+srmClose.addEventListener("click", closeSearchModal);
+searchResultsModal.addEventListener("click", e => {
+  if (e.target === searchResultsModal) closeSearchModal();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if (searchResultsModal.classList.contains("active")) closeSearchModal();
+    else closeDropdown();
+  }
+});
+
+document.addEventListener("click", e => {
+  if (!document.getElementById("searchWrap").contains(e.target)) closeDropdown();
+});
+
+</script>
+
+</body>
+</html>

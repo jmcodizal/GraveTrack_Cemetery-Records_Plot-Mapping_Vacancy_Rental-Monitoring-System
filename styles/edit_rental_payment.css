@@ -24,6 +24,7 @@
       font-weight: 800;
       letter-spacing: .03em;
       color: #ffffff;
+    -webkit-user-select: none;
       user-select: none;
     }
     .brand span { color: #60a5fa; }
@@ -45,9 +46,10 @@
     .nav-btn:hover { opacity: .85; transform: translateY(-1px); }
     .nav-btn:active { transform: translateY(0); }
 
-    .btn-generate { background: #2563eb; color: #fff; }
-    .btn-export   { background: #dbeafe; color: #1e3a8a; }
-    .btn-refresh  { background: #dbeafe; color: #1e3a8a; }
+    .btn-save   { background: #2563eb; color: #fff; }
+    .btn-update { background: #dbeafe; color: #1e3a8a; }
+    .btn-delete { background: #dbeafe; color: #1e3a8a; }
+    .btn-add    { background: #dbeafe; color: #1e3a8a; }
 
     .btn-power {
       width: 36px; height: 36px;
@@ -65,71 +67,33 @@
     /* ── CONTENT AREA ── */
     .content-area {
       flex: 1;
-      background: #f1f5f9;
+      background: #f8fafc;
       margin: .8rem;
       border-radius: 10px;
-      padding: 1rem 1.2rem;
+      padding: 1.1rem 1.4rem;
       display: flex;
       flex-direction: column;
-      gap: .8rem;
+      gap: .7rem;
       overflow-y: auto;
     }
 
-    /* ── STAT CARDS ROW ── */
-    .stat-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: .8rem;
-    }
-
-    .stat-card {
-      background: #ffffff;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      padding: .9rem 1.1rem;
+    /* ── FORM FIELDS ── */
+    .field-group {
       display: flex;
       flex-direction: column;
-      gap: .25rem;
+      gap: .22rem;
     }
 
-    .stat-label {
-      font-size: .8rem;
-      font-weight: 600;
-      color: #374151;
-    }
-    .stat-value {
-      font-family: 'Syne', sans-serif;
-      font-size: 1.4rem;
-      font-weight: 700;
+    .field-label {
+      font-size: .82rem;
+      font-weight: 500;
       color: #1e293b;
     }
 
-    /* ── FILTER ROW ── */
-    .filter-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: .8rem;
-    }
-
-    .filter-card {
-      background: #ffffff;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      padding: .9rem 1.1rem;
-      display: flex;
-      flex-direction: column;
-      gap: .4rem;
-    }
-
-    .filter-label {
-      font-size: .8rem;
-      font-weight: 600;
-      color: #374151;
-    }
-
-    .filter-input {
+    .field-input {
       width: 100%;
-      background: #f0f6ff;
+      max-width: 220px;
+      background: #ffffff;
       border: 1.5px solid #cbd5e1;
       border-radius: 6px;
       padding: .32rem .7rem;
@@ -139,67 +103,13 @@
       outline: none;
       transition: border-color .2s, box-shadow .2s;
     }
-    .filter-input:focus {
+    .field-input:focus {
       border-color: #2563eb;
       box-shadow: 0 0 0 3px rgba(37,99,235,.1);
     }
-    .filter-input::placeholder { color: #94a3b8; }
-
-    /* ── RESULTS TABLE ── */
-    .table-card {
-      background: #ffffff;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 12px;
-      overflow: hidden;
-      flex: 1;
-    }
-
-    .table-wrap { overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 500px;
-    }
-    thead th {
-      font-size: .73rem;
-      font-weight: 600;
-      color: #64748b;
-      padding: .5rem .9rem;
-      text-align: left;
-      border-bottom: 1.5px solid #e2e8f0;
-      background: #f8fafc;
-      white-space: nowrap;
-    }
-    tbody td {
-      font-size: .78rem;
-      color: #334155;
-      padding: .5rem .9rem;
-      border-bottom: 1px solid #f1f5f9;
-      white-space: nowrap;
-    }
-    tbody tr:last-child td { border-bottom: none; }
-    tbody tr:hover { background: #f0f6ff; }
-
-    .badge-status {
-      font-size: .7rem;
-      font-weight: 600;
-      padding: .2rem .6rem;
-      border-radius: 20px;
-      display: inline-block;
-    }
-    .badge-vacant   { background: #1665342c; color: #0d8b3e; }
-    .badge-occupied { background: #991b1b2f; color: #991b1b; }
-    .badge-reserved { background: #fef9c3; color: #854d0e; }
-
-    .empty-state {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2.5rem 1rem;
-      color: #94a3b8;
-      font-size: .82rem;
-    }
+    .field-input::placeholder { color: #94a3b8; }
+    .field-input::-ms-reveal,
+    .field-input::-ms-clear { display: none; }
 
     /* ── BOTTOM NAV ── */
     .bottom-nav {
