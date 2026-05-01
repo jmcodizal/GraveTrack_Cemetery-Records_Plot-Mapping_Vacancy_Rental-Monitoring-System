@@ -145,7 +145,7 @@ $total_plot = $conn->query("SELECT COUNT(*) as total FROM plots")->fetch_assoc()
 <!-- BOTTOM NAV -->
 <div class="bottom-nav">
     <button class="bottom-btn bb-default" onclick="window.location.href='dashboard.html'; setActive(this)">Dashboard</button>
-    <button class="bottom-btn bb-default" onclick="window.location.href='burial_records.html'; setActive(this)">Burial Records</button>
+    <button class="bottom-btn bb-default" onclick="window.location.href='burial_records.php'; setActive(this)">Burial Records</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='cemetery_map.html'; setActive(this)">Plot Mapping</button>
     <button class="bottom-btn bb-active" onclick="window.location.href='vacancy.php'; setActive(this)">Vacancy<br>Monitoring</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='payment_monitoring.html'; setActive(this)">Rental &amp;<br>Payment</button>
