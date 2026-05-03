@@ -21,7 +21,6 @@ if (!isset($_SESSION['user'])) {
   <div class="top-nav">
     <div class="brand">GR<span>A</span>VE<span>T</span>RACK</div>
     <div class="nav-actions">
-      <button class="nav-btn btn-reminder"  onclick="sendReminder()">Send<br>reminder</button>
       <button class="nav-btn btn-financial" onclick="generateFinancial()">Generate<br>Financial<br>Report</button>
       <button class="nav-btn btn-receipt"   onclick="printReceipt()">Print Receipt</button>
       <button class="btn-power" aria-label="Power off" onclick="confirmExit()">
@@ -37,31 +36,44 @@ if (!isset($_SESSION['user'])) {
 
     <div class="section-title">Payment Monitoring Dashboard</div>
 
-    <!-- Filter tabs -->
-    <div class="filter-tabs">
-      <button class="filter-tab active" onclick="filterRecords('all', this)">All Records</button>
-      <button class="filter-tab" onclick="filterRecords('paid', this)">Fully paid records</button>
-      <button class="filter-tab" onclick="filterRecords('upcoming', this)">Upcoming Due dates</button>
-    </div>
+    <!-- Filters (Vacancy style) -->
+    <form class="filters-form">
+      <div class="filter-row">
+        <div class="filter-card">
+          <div class="filter-label">Status</div>
+          <select id="statusFilter" class="filter-select" onchange="applyFilters()">
+            <option value="all">All Status</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+          </select>
+        </div>
+        <div class="filter-card">
+          <div class="filter-label">Deceased Name</div>
+          <input id="nameSearch" class="filter-input" placeholder="Search name..." oninput="applyFilters()">
+        </div>
+      </div>
+    </form>
 
-    <!-- Table -->
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Deceased Name</th>
-            <th>Plot Location</th>
-            <th>Contact Person</th>
-            <th> Contact Number</th>
-            <th>Date of Transaction</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-      <div class="empty-state" id="emptyState">No records found.</div>
+    <!-- Table (Vacancy Style) -->
+    <div class="table-card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Deceased Name</th>
+              <th>Plot Location</th>
+              <th>Contact Person</th>
+              <th>Contact Number</th>
+              <th>Date of Transaction</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState">No records found.</div>
+      </div>
     </div>
 
   </div>
@@ -72,7 +84,7 @@ if (!isset($_SESSION['user'])) {
     <button class="bottom-btn bb-default" onclick="window.location.href='burial_records.php'; setActive(this);">Burial Records</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='cemetery_map.html'; setActive(this)">Plot Mapping</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='vacancy.php'; setActive(this)">Vacancy<br>Monitoring</button>
-    <button class="bottom-btn bb-default" onclick="window.location.href='payment_monitoring.php'; setActive(this)">Rental &amp;<br>Payment</button>
+    <button class="bottom-btn bb-default" onclick="window.location.href='payment_monitoring.php'; setActive(this)">Payment<br>Monitoring</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='reports.html'; setActive(this)">Reports</button>
   </div>
 
@@ -119,7 +131,6 @@ if (!isset($_SESSION['user'])) {
           <td>
             <div class="action-btns">
               <button class="action-btn btn-view-rec" onclick="viewRecord(${i})">View</button>
-              <button class="action-btn btn-send"     onclick="sendOne('${r.name}')">Remind</button>
             </div>
           </td>
         `;
@@ -127,13 +138,27 @@ if (!isset($_SESSION['user'])) {
       });
     }
 
-    function filterRecords(type, btn) {
-      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      let filtered;
-      if (type === 'paid')          filtered = records.filter(r => r.status === 'Paid');
-      else if (type === 'upcoming') filtered = records.filter(r => r.status === 'Upcoming' || r.status === 'Pending');
-      else                          filtered = records;
+    let currentFilters = { status: 'all', search: '' };
+
+    function applyFilters() {
+      const statusFilter = document.getElementById('statusFilter').value;
+      const searchTerm = document.getElementById('nameSearch').value.toLowerCase();
+      
+      currentFilters.status = statusFilter;
+      currentFilters.search = searchTerm;
+      
+      let filtered = records.filter(r => {
+        // Status filter
+        if (statusFilter === 'paid') {
+          return r.status === 'Paid';
+        } else if (statusFilter === 'unpaid') {
+          return r.status === 'Pending' || r.status === 'Overdue';
+        }
+        
+        // Name search
+        return r.name.toLowerCase().includes(searchTerm);
+      });
+      
       renderTable(filtered);
     }
 
@@ -159,7 +184,6 @@ function viewRecord(i) {
   fetchTransactions(r.name);
 }
     function sendOne(name)       { toast(`Reminder sent to contact of ${name}`, '#22c55e'); }
-    function sendReminder()      { toast('Reminders sent to all pending/overdue contacts.', '#22c55e'); }
     function generateFinancial() { toast('Generating Financial Report…', '#2563eb'); }
     function printReceipt()      { window.print(); }
     function confirmExit()       { if (confirm('Are you sure you want to exit?')) window.close(); }

@@ -6,17 +6,29 @@ if ($conn->connect_error) {
 }
 
 // FILTERS
-$sectionFilter = isset($_GET['section']) ? $_GET['section'] : '';
-$typeFilter    = isset($_GET['type']) ? $_GET['type'] : '';
+$blockFilter = isset($_GET['block']) ? $_GET['block'] : 'all';
+$typeFilter  = isset($_GET['type']) ? $_GET['type'] : 'all';
+$statusFilter = isset($_GET['status']) ? $_GET['status'] : 'all';
 
-// SQL with filters
-$sql = "SELECT * FROM plots WHERE 1";
-
-if (!empty($sectionFilter)) {
-    $sql .= " AND section LIKE '%$sectionFilter%'";
+// Get distinct blocks
+$blocksResult = $conn->query("SELECT DISTINCT block FROM plots ORDER BY block ASC");
+$blocks = [];
+if ($blocksResult) {
+    while ($row = $blocksResult->fetch_assoc()) {
+        $blocks[] = $row['block'];
+    }
 }
-if (!empty($typeFilter)) {
-    $sql .= " AND type LIKE '%$typeFilter%'";
+
+// Build SQL
+$sql = "SELECT * FROM plots WHERE 1=1";
+if ($blockFilter !== 'all') {
+    $sql .= " AND block = '" . $conn->real_escape_string($blockFilter) . "'";
+}
+if ($typeFilter !== 'all') {
+    $sql .= " AND type LIKE '%" . $conn->real_escape_string($typeFilter) . "%'";
+}
+if ($statusFilter !== 'all') {
+    $sql .= " AND status = '" . $conn->real_escape_string($statusFilter) . "'";
 }
 
 $result = $conn->query($sql);
@@ -75,22 +87,38 @@ $total_plot = $conn->query("SELECT COUNT(*) as total FROM plots")->fetch_assoc()
   <form method="GET">
     <div class="filter-row">
       <div class="filter-card">
-        <div class="filter-label">Filter by Section</div>
-        <input class="filter-input" type="text" name="section"
-          value="<?= htmlspecialchars($sectionFilter) ?>"
-          placeholder="e.g. Section 1"/>
+        <div class="filter-label">Filter by Block</div>
+        <select class="filter-select" name="block">
+          <option value="all" <?= ($blockFilter === 'all') ? 'selected' : '' ?>>All Blocks</option>
+          <?php foreach ($blocks as $block): ?>
+          <option value="<?= htmlspecialchars($block) ?>" <?= ($blockFilter === $block) ? 'selected' : '' ?>>
+            Block <?= htmlspecialchars($block) ?>
+          </option>
+          <?php endforeach; ?>
+        </select>
       </div>
 
       <div class="filter-card">
         <div class="filter-label">Filter by Plot Type</div>
-        <input class="filter-input" type="text" name="type"
-          value="<?= htmlspecialchars($typeFilter) ?>"
-          placeholder="e.g. Ground, Apartment"/>
+        <select class="filter-select" name="type">
+          <option value="all" <?= ($typeFilter === 'all') ? 'selected' : '' ?>>All Types</option>
+          <option value="Apartment" <?= ($typeFilter === 'Apartment') ? 'selected' : '' ?>>Apartment</option>
+          <option value="Single" <?= ($typeFilter === 'Single') ? 'selected' : '' ?>>Single</option>
+        </select>
       </div>
-        <div class="filter-card" style="display:flex; align-items:end;">
-          <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
-        </div>
-        
+
+      <div class="filter-card">
+        <div class="filter-label">Filter by Status</div>
+        <select class="filter-select" name="status">
+          <option value="all" <?= ($statusFilter === 'all') ? 'selected' : '' ?>>All Status</option>
+          <option value="Vacant" <?= ($statusFilter === 'Vacant') ? 'selected' : '' ?>>Vacant</option>
+          <option value="Occupied" <?= ($statusFilter === 'Occupied') ? 'selected' : '' ?>>Occupied</option>
+        </select>
+      </div>
+
+      <div class="filter-card" style="display:flex; align-items:end;">
+        <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+      </div>
     </div>
   </form>
 
@@ -148,7 +176,7 @@ $total_plot = $conn->query("SELECT COUNT(*) as total FROM plots")->fetch_assoc()
     <button class="bottom-btn bb-default" onclick="window.location.href='burial_records.php'; setActive(this)">Burial Records</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='cemetery_map.html'; setActive(this)">Plot Mapping</button>
     <button class="bottom-btn bb-active" onclick="window.location.href='vacancy.php'; setActive(this)">Vacancy<br>Monitoring</button>
-    <button class="bottom-btn bb-default" onclick="window.location.href='payment_monitoring.html'; setActive(this)">Rental &amp;<br>Payment</button>
+    <button class="bottom-btn bb-default" onclick="window.location.href='payment_monitoring.php'; setActive(this)">Payment<br>Monitoring</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='reports.html'; setActive(this)">Reports</button>
   </div>
 

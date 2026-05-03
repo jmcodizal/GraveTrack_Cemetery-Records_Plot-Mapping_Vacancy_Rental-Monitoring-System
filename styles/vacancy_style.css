@@ -107,7 +107,7 @@
     /* ── FILTER ROW ── */
     .filter-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
       gap: .8rem;
     }
 
@@ -127,7 +127,8 @@
       color: #374151;
     }
 
-    .filter-input {
+    .filter-input,
+    .filter-select {
       width: 100%;
       background: #f0f6ff;
       border: 1.5px solid #cbd5e1;
@@ -139,11 +140,13 @@
       outline: none;
       transition: border-color .2s, box-shadow .2s;
     }
-    .filter-input:focus {
+    .filter-input:focus,
+    .filter-select:focus {
       border-color: #2563eb;
       box-shadow: 0 0 0 3px rgba(37,99,235,.1);
     }
     .filter-input::placeholder { color: #94a3b8; }
+    .filter-select option { background: white; }
 
     /* ── RESULTS TABLE ── */
     .table-card {

@@ -146,7 +146,7 @@ if (!empty($searchFilter) && $result && $result->num_rows > 0) {
     <button class="bottom-btn bb-active" onclick="window.location.href='burial_records.php'; setActive(this)">Burial Records</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='cemetery_map.html'; setActive(this)">Plot Mapping</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='vacancy.php'; setActive(this)">Vacancy<br>Monitoring</button>
-    <button class="bottom-btn bb-default" onclick="window.location.href='payment_monitoring.html'; setActive(this)">Rental &amp;<br>Payment</button>
+    <button class="bottom-btn bb-default" onclick="window.location.href='payment_monitoring.php'; setActive(this)">Payment<br>Monitoring</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='reports.html'; setActive(this)">Reports</button>
   </div>
 
