@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (!isset($_SESSION['user'])) {
+    header('Location: login.php');
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,7 +51,9 @@
           <tr>
             <th>Deceased Name</th>
             <th>Plot Location</th>
-            <th>Rental Period</th>
+            <th>Contact Person</th>
+            <th> Contact Number</th>
+            <th>Date of Transaction</th>
             <th>Amount</th>
             <th>Status</th>
             <th>Actions</th>
@@ -60,10 +69,10 @@
   <!-- Bottom navigation -->
   <div class="bottom-nav">
     <button class="bottom-btn bb-default" onclick="window.location.href='dashboard.html';setActive(this)">Dashboard</button>
-    <button class="bottom-btn bb-default"  onclick="window.location.href='burial_records.php'; setActive(this); ">Burial Records</button>
+    <button class="bottom-btn bb-default" onclick="window.location.href='burial_records.php'; setActive(this);">Burial Records</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='cemetery_map.html'; setActive(this)">Plot Mapping</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='vacancy.php'; setActive(this)">Vacancy<br>Monitoring</button>
-    <button class="bottom-btn bb-active" onclick="window.location.href='payment_monitoring.html'; setActive(this)">Rental &amp;<br>Payment</button>
+    <button class="bottom-btn bb-default" onclick="window.location.href='payment_monitoring.php'; setActive(this)">Rental &amp;<br>Payment</button>
     <button class="bottom-btn bb-default" onclick="window.location.href='reports.html'; setActive(this)">Reports</button>
   </div>
 
@@ -71,15 +80,18 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    const records = [
-      { name: 'Juan dela Cruz',  plot: 'Block A - Lot 1', period: 'Jan 2026 – Jan 2027', amount: '₱5,000',  status: 'Paid',     due: null },
-      { name: 'Maria Santos',    plot: 'Block B - Lot 2', period: 'Feb 2026 – Feb 2027', amount: '₱2,500',  status: 'Paid',     due: null },
-      { name: 'Pedro Reyes',     plot: 'Block C - Lot 3', period: 'Mar 2026 – Mar 2027', amount: '₱1,200',  status: 'Pending',  due: '2026-04-01' },
-      { name: 'Ana Gonzales',    plot: 'Block A - Lot 4', period: 'Mar 2026 – Mar 2027', amount: '₱5,000',  status: 'Paid',     due: null },
-      { name: 'Jose Mendoza',    plot: 'Block D - Lot 1', period: 'Jan 2026 – Jan 2027', amount: '₱3,000',  status: 'Overdue',  due: '2026-02-01' },
-      { name: 'Luisa Bautista',  plot: 'Block B - Lot 5', period: 'Apr 2026 – Apr 2027', amount: '₱4,500',  status: 'Upcoming', due: '2026-04-15' },
-      { name: 'Carlos Villanueva', plot: 'Block C - Lot 2', period: 'Apr 2026 – Apr 2027', amount: '₱2,000', status: 'Upcoming', due: '2026-04-20' },
-    ];
+    let records = [];
+
+    async function loadRecords() {
+      try {
+        const response = await fetch('api/get_payment_summary.php');
+        if (!response.ok) throw new Error('API error: ' + response.status);
+        records = await response.json();
+        renderTable(records);
+      } catch (error) {
+        toast('Failed to load payments: ' + error.message, '#ef4444');
+      }
+    }
 
     const statusClass = {
       'Paid':     'badge-paid',
@@ -99,9 +111,11 @@
         tr.innerHTML = `
           <td>${r.name}</td>
           <td>${r.plot}</td>
+          <td>${r.contact_person || ''}</td>
+          <td>${r.contact_num || ''}</td>
           <td>${r.period}</td>
-          <td>${r.amount}</td>
-          <td><span class="badge-status ${statusClass[r.status]}">${r.status}</span></td>
+          <td>₱${parseFloat(r.amount || 0).toLocaleString()}</td>
+          <td><span class="badge-status ${statusClass[r.status] || 'badge-pending'}">${r.status || 'Pending'}</span></td>
           <td>
             <div class="action-btns">
               <button class="action-btn btn-view-rec" onclick="viewRecord(${i})">View</button>
@@ -117,13 +131,33 @@
       document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       let filtered;
-      if (type === 'paid')     filtered = records.filter(r => r.status === 'Paid');
+      if (type === 'paid')          filtered = records.filter(r => r.status === 'Paid');
       else if (type === 'upcoming') filtered = records.filter(r => r.status === 'Upcoming' || r.status === 'Pending');
-      else filtered = records;
+      else                          filtered = records;
       renderTable(filtered);
     }
 
-    function viewRecord(i)       { toast(`Viewing record for ${records[i].name}`, '#2563eb'); }
+function viewRecord(i) {
+  const r = records[i];
+  // Show modal with transactions
+  let modalHtml = `
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5>Transactions for ${r.name}</h5>
+            <button type="button" class="btn-close" onclick="closeViewModal()"></button>
+          </div>
+          <div class="modal-body">
+            <div id="transactions-loading">Loading transactions...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', modalHtml);
+  fetchTransactions(r.name);
+}
     function sendOne(name)       { toast(`Reminder sent to contact of ${name}`, '#22c55e'); }
     function sendReminder()      { toast('Reminders sent to all pending/overdue contacts.', '#22c55e'); }
     function generateFinancial() { toast('Generating Financial Report…', '#2563eb'); }
@@ -149,7 +183,51 @@
       setTimeout(() => el.remove(), 3000);
     }
 
-    renderTable(records);
+    loadRecords();
+
+  async function fetchTransactions(name) {
+    try {
+      const response = await fetch('api/get_deceased_transactions.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: name})
+      });
+      const transactions = await response.json();
+      const loading = document.getElementById('transactions-loading');
+      if (transactions.error) {
+        loading.innerHTML = '<p class="text-danger">Error: ' + transactions.error + '</p>';
+      } else {
+        let html = transactions.length ? 
+          transactions.map(t => `
+            <div class="transaction-item mb-3 p-3 border rounded">
+
+              <strong>Payment ID:</strong> ${t.payment_id}<br>
+
+              <strong>Amount:</strong> ₱${parseFloat(t.amount || 0).toLocaleString()}<br>
+
+              <strong>Date Paid:</strong> ${t.payment_date || 'N/A'}<br>
+
+              <strong>Status:</strong> ${t.status}<br>
+
+              <strong>Timeliness:</strong> 
+              <span class="badge ${t.timeliness === 'Late' ? 'bg-danger' : 'bg-success'}">
+                ${t.timeliness}
+              </span>
+
+            </div>
+          `).join('') : 
+          '<p>No transactions found.</p>';
+        loading.innerHTML = html;
+      }
+    } catch (error) {
+      document.getElementById('transactions-loading').innerHTML = '<p class="text-danger">Failed to load: ' + error.message + '</p>';
+    }
+  }
+
+  function closeViewModal() {
+    document.querySelector('.modal').remove();
+  }
   </script>
+
 </body>
 </html>

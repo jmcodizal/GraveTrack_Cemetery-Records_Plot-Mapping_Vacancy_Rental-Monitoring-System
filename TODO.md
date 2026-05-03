@@ -1,1 +1,1 @@
-- [x] Step 1: Create api/get_vacancies.php (PHP endpoint querying plots table with JOINs, filters)
+- [x] Step 1: Create api/get_vacancies.php (PHP endpoint querying plots table with JOINs, filters)\n\n# Payment Monitoring\n- [x] 1. Created api/get_payment_summary.php\n- [ ] 2. Updated payment_monitoring.php with auth, fetch, table fix\n- [ ] 3. Test page
