@@ -299,8 +299,8 @@ try {
                     <div class="block-col">
                         <div class="block-label">AA</div>
                         <div class="plots-stack">
-                            <?php for ($lot = 1; $lot <= $LOTS; $lot++):
-                                $plotData   = findPlot($plotsData, 'AA', $lot, 3);
+                            <?php for ($lot = $LOTS; $lot >= 1; $lot--):
+                                $plotData   = findPlot($plotsData, 'AA', $lot);
                                 $isOccupied = $plotData && $plotData['occupant_count'] > 0;
                                 $status     = $isOccupied ? 'occupied' : 'vacant';
                                 $plotCode   = 'AA-' . $lot;
@@ -337,8 +337,8 @@ try {
                     <div class="block-col">
                         <div class="block-label"><?php echo $blockName; ?></div>
                         <div class="plots-stack">
-                            <?php for ($lot = 1; $lot <= $LOTS; $lot++):
-                                $plotData   = findPlot($plotsData, $blockName, $lot, $phaseNum);
+                            <?php for ($lot = $LOTS; $lot >= 1; $lot--):
+                                $plotData   = findPlot($plotsData, $blockName, $lot);
                                 $isOccupied = $plotData && $plotData['occupant_count'] > 0;
                                 $status     = $isOccupied ? 'occupied' : 'vacant';
                                 $plotCode   = $blockName . '-' . $lot;
@@ -367,8 +367,8 @@ try {
                     <div class="block-col">
                         <div class="block-label"><?php echo $blockName; ?></div>
                         <div class="plots-stack">
-                            <?php for ($lot = 1; $lot <= $LOTS; $lot++):
-                                $plotData   = findPlot($plotsData, $blockName, $lot, $phaseNum);
+                            <?php for ($lot = $LOTS; $lot >= 1; $lot--):
+                                $plotData   = findPlot($plotsData, $blockName, $lot);
                                 $isOccupied = $plotData && $plotData['occupant_count'] > 0;
                                 $status     = $isOccupied ? 'occupied' : 'vacant';
                                 $plotCode   = $blockName . '-' . $lot;
