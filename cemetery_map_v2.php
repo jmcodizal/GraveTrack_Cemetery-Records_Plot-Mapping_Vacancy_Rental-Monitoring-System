@@ -105,26 +105,112 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GraveTrack Cemetery Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/cemetery_map_style.css">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f5f5; }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Syne:wght@700;800&display=swap');
+        html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'DM Sans', sans-serif; background: #e8f0fb; }
         .page { display: flex; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; }
-        .site-header { flex-shrink: 0; background: linear-gradient(135deg, #3d6b4f, #254d36); color: #fff; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-        .site-header h1 { font-size: 18px; white-space: nowrap; }
-        .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .search-input  { padding:6px 10px; border:1px solid #ccc; border-radius:5px; font-size:12px; min-width:160px; }
-        .filter-select { padding:6px 10px; border:1px solid #ccc; border-radius:5px; font-size:12px; }
-        .btn-search    { padding:6px 14px; background:#fff; color:#254d36; border:none; border-radius:5px; cursor:pointer; font-weight:700; font-size:12px; }
-        .btn-search:hover { background:#e0ffe0; }
-        .btn-clear     { padding:6px 12px; background:rgba(255,255,255,.2); color:#fff; border:1px solid rgba(255,255,255,.4); border-radius:5px; cursor:pointer; font-weight:600; font-size:12px; text-decoration:none; }
-        .legend { flex-shrink: 0; display: flex; gap: 18px; align-items: center; padding: 5px 20px; background: #fff; border-bottom: 1px solid #ddd; font-size: 12px; }
-        .legend-item { display:flex; align-items:center; gap:5px; font-weight:600; color:#444; }
+
+        /* ── NAVBAR (vacancy_style) ── */
+        .site-header {
+          flex-shrink: 0;
+          background: #1a3a6e;
+          padding: .55rem 1.2rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+        }
+        .brand {
+          font-family: 'Syne', sans-serif;
+          font-size: 1.2rem;
+          font-weight: 800;
+          letter-spacing: .03em;
+          color: #ffffff;
+          user-select: none;
+        }
+        .brand span { color: #60a5fa; }
+        .nav-actions { display: flex; align-items: center; gap: .55rem; }
+        .nav-btn {
+          font-family: 'DM Sans', sans-serif;
+          font-size: .82rem;
+          font-weight: 600;
+          padding: .38rem 1.1rem;
+          border-radius: 20px;
+          border: none;
+          cursor: pointer;
+          transition: opacity .2s, transform .15s;
+          text-align: center;
+          line-height: 1.3;
+          text-decoration: none;
+          display: inline-block;
+        }
+        .nav-btn:hover { opacity: .85; transform: translateY(-1px); }
+        .nav-btn:active { transform: translateY(0); }
+        .btn-search  { background: #2563eb; color: #fff; }
+        .btn-clear   { background: #dbeafe; color: #1e3a8a; }
+        .search-input {
+          background: #f0f6ff;
+          border: 1.5px solid #cbd5e1;
+          border-radius: 20px;
+          padding: .32rem .9rem;
+          font-family: 'DM Sans', sans-serif;
+          font-size: .82rem;
+          color: #1e293b;
+          outline: none;
+          transition: border-color .2s, box-shadow .2s;
+          min-width: 160px;
+        }
+        .search-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+        .search-input::placeholder { color: #94a3b8; }
+        .filter-select {
+          background: #f0f6ff;
+          border: 1.5px solid #cbd5e1;
+          border-radius: 20px;
+          padding: .32rem .9rem;
+          font-family: 'DM Sans', sans-serif;
+          font-size: .82rem;
+          color: #1e293b;
+          outline: none;
+          cursor: pointer;
+        }
+        .btn-power {
+          width: 36px; height: 36px;
+          border-radius: 50%;
+          border: none;
+          background: #ef4444;
+          color: #fff;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          transition: background .2s, transform .15s;
+          flex-shrink: 0;
+        }
+        .btn-power:hover { background: #dc2626; transform: scale(1.08); }
+        .btn-power svg { width: 16px; height: 16px; }
+
+        /* ── LEGEND BAR ── */
+        .legend {
+          flex-shrink: 0;
+          display: flex;
+          gap: 18px;
+          align-items: center;
+          padding: 5px 20px;
+          background: #dbeafe;
+          border-bottom: 1px solid #bfdbfe;
+          font-size: 12px;
+          font-family: 'DM Sans', sans-serif;
+        }
+        .legend-item { display:flex; align-items:center; gap:5px; font-weight:600; color:#1e3a8a; }
         .lbox { width:22px; height:11px; border-radius:3px; border:2px solid; }
         .lbox.vacant   { background:#5cb85c; border-color:#3a8a3a; }
         .lbox.occupied { background:#d9534f; border-color:#a02020; }
         .lbox.unnamed  { background:#d9534f; border-color:#a02020; }
-        .map-outer { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #f5f5f5; padding: 10px 16px 8px; }
+
+        .map-outer { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #e8f0fb; padding: 10px 16px 8px; }
         .map-scaler { transform-origin: center center; display: inline-block; white-space: nowrap; }
         .map-inner { background: #fff; padding: 16px 24px 0; display: inline-flex; flex-direction: column; align-items: flex-start; }
         .all-blocks { display: flex; align-items: flex-end; gap: 0; }
@@ -170,8 +256,8 @@ try {
 <body>
 <div class="page">
     <div class="site-header">
-        <h1>🪦 GraveTrack Cemetery Map</h1>
-        <form method="GET" class="toolbar">
+        <div class="brand">GRAVE<span>TRACK</span> <span style="font-size:.75rem;font-weight:600;color:#bfdbfe;margin-left:.3rem;">Cemetery Map</span></div>
+        <form method="GET" class="nav-actions">
             <input type="text" name="search" class="search-input"
                    placeholder="Search name or block…"
                    value="<?php echo htmlspecialchars($searchQuery); ?>">
@@ -184,10 +270,15 @@ try {
                     </option>
                 <?php endforeach; ?>
             </select>
-            <button type="submit" class="btn-search">Search</button>
+            <button type="submit" class="nav-btn btn-search">Search</button>
             <?php if (!empty($searchQuery) || $filterPhase > 0): ?>
-                <a href="cemetery_map_v2.php" class="btn-clear">Clear</a>
+                <a href="cemetery_map_v2.php" class="nav-btn btn-clear">Clear</a>
             <?php endif; ?>
+            <button type="button" class="btn-power" onclick="window.history.back()" title="Go back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/><line x1="12" y1="2" x2="12" y2="12"/>
+                </svg>
+            </button>
         </form>
     </div>
 
