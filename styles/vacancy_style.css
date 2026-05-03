@@ -6,7 +6,7 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
     /* ── NAVBAR ── */
@@ -72,7 +72,7 @@
       display: flex;
       flex-direction: column;
       gap: .8rem;
-      overflow-y: auto;
+      overflow: hidden;
     }
 
     /* ── STAT CARDS ROW ── */
@@ -157,7 +157,12 @@
       flex: 1;
     }
 
-    .table-wrap { overflow-x: auto; }
+    .table-wrap { 
+      overflow-x: auto; 
+      overflow-y: auto; 
+      max-height: 60vh;
+      -webkit-overflow-scrolling: touch;
+    }
 
     table {
       width: 100%;
